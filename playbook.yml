@@ -1,0 +1,24 @@
+---
+  - hosts: webserver
+    name: SELinux and Test Apache
+    tasks:
+      - name: Set SELinux to Enforce
+        ansible.posix.selinux:
+          state: enforcing
+    
+      - name: Install Apache
+        yum: name=apache2 update_cache=yes state=latest
+
+      - name: Index Creation
+        template:
+          src: index.html
+          dest: /var/www_test/index.html
+
+      - name: Change Document Root
+        lineinfile: dest=/usr/local/apache2/conf/httpd.conf regexp="^<DocumentRoot "/usr/local/apache2/htdocs">" line="<DocumentRoot "/var/www_test">" state=present
+
+      - name: Start Apache
+        service: name=apache2 state=started
+     
+      - name: Set Non-Standard Web Root for SELinux
+        command: semanage fcontext -a -t httpd_sys_content_t /var/www_test
